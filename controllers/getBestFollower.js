@@ -1,5 +1,6 @@
 let constantObj = require("../constants.js");
 let instagramCredentials = constantObj.configInstagram;
+let Promise         = require('bluebird');
 
 let ig = require('instagram-node').instagram();
 ig.use(instagramCredentials);
@@ -27,48 +28,86 @@ exports.getBestFollower = function(req, res, next) {
                 medias.forEach(function(media){
                  media_id.push(media.id);
                 });
-                let userdata = getUserslist(media_id,function(err,data){
-                    if(err) {
-                        return res.status(401).send({
-                            'status': 401,
-                            'messageId': 401,
-                            'message': err
-                          });
-                    }else{
-                        console.log(data);
-                    }
-                });
-                console.log(userdata,"userdata")
-                return res.send({
-                    'msg':'thanks',
-                    'userdata': userdata
-                }) //final response from the api
+                    getUsersLiked(media_id)
+                    .then((data) => {
+                        let most_liked_by = countMax(data);
+                        console.log(most_liked_by,'max_liked_bymax_liked_by');
+                        return res.status(200).send({
+                            'status':200,
+                            'messageId' : 200,
+                            'most_likes_to_me': most_liked_by                        
+                        })
+                    })
+                    .catch((err) => {
+                        console.log('err', err);
+                    })
             }
         });
     }
 }
 
-function getUserslist(media_id,data){
-    let returndata= [];
-    for(let i=0; i<media_id.length; i++){
-        ig.likes(media_id[i], function(err, result, remaining, limit) {
-            if(err){
-                 return res.status(401).send({
-                     'status': 401,
-                     'messageId': 401,
-                     'message': err
-                 });
-             }else{
-                let commondata = {
-                    'media_id' : media_id[i],
-                    'user_likes' : result
+// to get the users list who likes the media 
+ function getUsersLiked(media_id){
+    let likeddata=[];
+    let len = media_id.length;
+    return  new Promise((resolve, reject) => {
+        for(let i=0; i<len; i++){
+            ig.likes(media_id[i], function(err, result, remaining, limit) { 
+                if(err){
+                    reject(err);
+                 }else{
+                    let commondata = {
+                         'media_id' : media_id[i],
+                         'user_likes' : result
+                    }
+                    likeddata.push(commondata);
+                    if( i == len-1){
+                    resolve(likeddata);
+                    }
                 }
-                returndata.push(commondata);
-            }
-        });
-    } console.log(returndata,'reutr')   
-    return data= {
-        'commondata' : returndata
-    };
+            })
+        }
+    })
 }
 
+// end of getUsersLiked funciton
+ 
+// to count maximum count of like and
+function countMax(users){
+    let highestValuelike = 0;
+    let highestValuecomment = 0;
+    let usersIDs= [];
+    if(users.length == 0){
+        return message ={
+            'msg' :'No users liked the media'
+        }
+    }else{
+        let count = 0;
+        users.forEach(function(user){
+            var id = user.user_likes;           
+            usersIDs.push(id);
+        });
+       let usersoccuredmost= occurrence(usersIDs);
+       console.log(usersIDs,"usersIDsusersIDs",users,"************")
+       return usersoccuredmost;
+    }
+} 
+// end of countMax function
+
+var occurrence = function (array) {
+    "use strict";
+    var result = [];
+    if (array instanceof Array) {
+        array.forEach(function ( i) {
+            if (!result) {
+                result = [i];
+            } else {
+                result.push(i);
+            }
+        });
+        Object.keys(result).forEach(function (v) {
+            result = { "length": result.length};
+        });
+    }
+    return result;
+};
