@@ -5,18 +5,19 @@ let Promise         = require('bluebird');
 let ig = require('instagram-node').instagram();
 ig.use(instagramCredentials);
 
-exports.getBestFollower = function(req, res, next) { 
+
+exports.getBestFollower = function(req, res, next) {
     if (!req.body.access_token) {
         return  res.status(400).send({
           'status': '400',
           'messageId': 400,
           'message': 'please enter access token.'
         });
-      }else{
+    }else{
         var access_token = req.body.access_token;
         ig.use({ access_token: access_token });
         let userId = req.body.access_token.split('.')[0];
-        ig.user_media_recent(userId, [], function(err, medias, pagination, remaining, limit) {          
+        ig.user_media_recent(userId, [], function(err, medias) {
             if(err) {
                 return res.status(401).send({
                    'status': 401,
@@ -24,90 +25,128 @@ exports.getBestFollower = function(req, res, next) {
                    'message': err
                });
             }else{
-                let media_id = [];
-                medias.forEach(function(media){
-                 media_id.push(media.id);
-                });
-                    getUsersLiked(media_id)
+                let mediaObj = [];
+                 getUsersLiked(medias)
+                    .then((userLiked) =>{
+                        return userLiked.userdata
+                    } )
                     .then((data) => {
-                        let most_liked_by = countMax(data);
-                        console.log(most_liked_by,'max_liked_bymax_liked_by');
-                        return res.status(200).send({
-                            'status':200,
-                            'messageId' : 200,
-                            'most_likes_to_me': most_liked_by                        
+                        getUserCommented(medias)
+                        .then((commentdata) => {
+                            return res.status(200).send({
+                                 'status':200,
+                                 'messageId' : 200,
+                                 'most_likes_to_me' : data,
+                                 'most_comment_to_me' : commentdata
+                            })
                         })
                     })
                     .catch((err) => {
+                        return err;
                         console.log('err', err);
                     })
-            }
-        });
+                }
+            });
+        }
     }
-}
 
-// to get the users list who likes the media 
- function getUsersLiked(media_id){
-    let likeddata=[];
+function getUsersLiked(medias){
+  let likeddata=[];
+  let newMediaCount =[]
+  let media_id =[];
+  medias.forEach(function(media){
+    media_id.push(media.id);
+   });
+  let len = media_id.length;
+    return  new Promise((resolve, reject) => {
+        for(let i=0; i<len; i++){
+            ig.likes(media_id[i], function(err, result) {
+                if(err){
+                    resolve(err);
+                }else{
+                    result.filter(function(el){
+                        let avilableIndex = likeddata.indexOf(el.id);
+                        if(avilableIndex == -1){
+                           likeddata.push(el.id)
+                           newMediaCount.push({"userId": el.id,"count":1,"userData":el})
+                        }
+                        else if(avilableIndex == 0 || avilableIndex == 1){
+                            newMediaCount.forEach(function(item){
+                                if(item.userId == el.id ){
+                                  item.count = item.count +1 ;
+                                }
+                            })
+                        }
+                    })
+                    if( i == len-1){
+                        resolve(countMax(newMediaCount));
+                    }
+                }
+            });
+        }
+    })
+}
+function getUserCommented(medias){
+    let commentedData =[];
+    let newMediaCount =[]
+    let media_id =[];
+    medias.forEach(function(media){
+      media_id.push(media.id);
+     });
     let len = media_id.length;
     return  new Promise((resolve, reject) => {
         for(let i=0; i<len; i++){
-            ig.likes(media_id[i], function(err, result, remaining, limit) { 
+            ig.comments(media_id[i], function(err, result, remaining, limit) {
                 if(err){
-                    reject(err);
-                 }else{
-                    let commondata = {
-                         'media_id' : media_id[i],
-                         'user_likes' : result
-                    }
-                    likeddata.push(commondata);
-                    if( i == len-1){
-                    resolve(likeddata);
-                    }
-                }
-            })
+                    reject (err);
+                  }else{
+                      result.filter(function(el){
+                          let avilableIndex = commentedData.indexOf(el.id);
+                          if(avilableIndex == -1){
+                            commentedData.push(el.id)
+                             newMediaCount.push({"userId": el.id,"count":1,"userData":el})
+                          }
+                          else if(avilableIndex == 0 || avilableIndex == 1){
+                              newMediaCount.forEach(function(item){
+                                  if(item.userId == el.id ){
+                                    item.count = item.count +1 ;
+                                  }
+                              })
+                          }
+                      })
+                      if(i == len-1){
+                        resolve(countMax(newMediaCount));
+                      }
+                  }
+            });
         }
     })
 }
 
-// end of getUsersLiked funciton
- 
-// to count maximum count of like and
-function countMax(users){
-    let highestValuelike = 0;
-    let highestValuecomment = 0;
-    let usersIDs= [];
-    if(users.length == 0){
-        return message ={
-            'msg' :'No users liked the media'
-        }
-    }else{
-        let count = 0;
-        users.forEach(function(user){
-            var id = user.user_likes;           
-            usersIDs.push(id);
-        });
-       let usersoccuredmost= occurrence(usersIDs);
-       console.log(usersIDs,"usersIDsusersIDs",users,"************")
-       return usersoccuredmost;
-    }
-} 
-// end of countMax function
+function countMax(userInfo){
+    let userdata= [];
+    var highestValue = 0;
+    for (var i=0, len = userInfo.length; i<len; i++) {
+      var countValue = Number(userInfo[i].count);
+      if (countValue > highestValue) {
+        highestValue = countValue;
+         userdata = userInfo[i];
+      }
+    } return maxValue={
+        "userdata" : userdata
+    };
+}
 
-var occurrence = function (array) {
-    "use strict";
-    var result = [];
-    if (array instanceof Array) {
-        array.forEach(function ( i) {
-            if (!result) {
-                result = [i];
-            } else {
-                result.push(i);
-            }
-        });
-        Object.keys(result).forEach(function (v) {
-            result = { "length": result.length};
-        });
-    }
-    return result;
-};
+// function countcommentMax(userInfo){
+//     let userdata= [];
+//     var highestValue = 0;
+//     for (var i=0, len = userInfo.length; i<len; i++) {
+//       var countValue = Number(userInfo[i].count);
+//       if (countValue > highestValue) {
+//         highestValue = countValue;
+//          userdata = userInfo[i];
+//       }
+//     } return maxValue={
+//         "userdata" : userdata
+//     };
+// }

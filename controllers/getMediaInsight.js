@@ -75,17 +75,23 @@ exports.getMediaDetails = function(req, res, next) {
                     most_commented_data.push(medias[i])
                 }
             }
+            most_liked_data.sort(function (a, b) {
+                let count = most_liked_data[i].likes.count;
+                return b.count - a.count;
+            });
             for(i=0; i<most_liked_data.length; i++){
                 most_liked_media = {
-                count : most_liked_data[i].likes.count,
-                url : most_liked_data[i].images.standard_resolution
+                likes : most_liked_data[i].likes.count,
+                comments:most_liked_data[i].comments.count,
+                url : most_liked_data[i].images.standard_resolution.url
                 }
                 liked_media[i]= most_liked_media;
             }
             for(i=0; i<most_commented_data.length; i++){
                 most_commented_media = {
+                likes : most_commented_data[i].likes.count,
                 comments : most_commented_data[i].comments.count,
-                url : most_commented_data[i].images.standard_resolution
+                url : most_commented_data[i].images.standard_resolution.url
                 }
                 commented_media[i]= most_commented_media;
             }
@@ -120,4 +126,5 @@ exports.getMediaDetails = function(req, res, next) {
         };
     } 
 // end of countMax function
+
 
