@@ -15,7 +15,6 @@ exports.getMediaDetails = function(req, res, next) {
         var access_token = req.body.access_token;
         ig.use({ access_token: access_token });
         let userId = req.body.access_token.split('.')[0];
-
         ig.user_media_recent(userId, [], function(err, medias, pagination, remaining, limit) {
             if(err) {
                  return res.status(401).send({
@@ -26,20 +25,7 @@ exports.getMediaDetails = function(req, res, next) {
             }else{
                 let data = {};
                 let commondata = [];
-                
-                // get popular upload
-                let popularData =getMostpopulardmedia(medias,function(err,data){
-                    if(err) {
-                        return res.status(401).send({
-                            'status': 401,
-                            'messageId': 401,
-                            'message': err
-                          });
-                    }else{
-                        commondata = data;
-                    }
-                    
-                })
+                let popularData =getMostpopulardmedia(medias);
                 return res.status(200).send({
                     'status': '200',
                     'messageId': 200,
@@ -49,16 +35,9 @@ exports.getMediaDetails = function(req, res, next) {
             }
         });
     }
-}
-       
+}     
  // Description : common function to return getMostlikedmedia. 
-
     function getMostpopulardmedia(medias,data) {
-        let popular_media = {};
-        let most_liked_data = [];
-        let liked_media = [];
-        let most_commented_data = [];
-        let commented_media = [];
         if (medias == 'undefined'){
             return res.status(401).send({
                 'status': 401,
@@ -66,65 +45,39 @@ exports.getMediaDetails = function(req, res, next) {
                 'message': 'No media data found.'
             });
         }else{
-            let Count = countMax(medias);
-            for(let i=0; i<medias.length; i++){
-                if(medias[i].likes.count == Count.likecount){
-                    most_liked_data.push(medias[i])
-                }
-                if(medias[i].comments.count == Count.commentcount){
-                    most_commented_data.push(medias[i])
-                }
-            }
-            most_liked_data.sort(function (a, b) {
-                let count = most_liked_data[i].likes.count;
-                return b.count - a.count;
-            });
-            for(i=0; i<most_liked_data.length; i++){
-                most_liked_media = {
-                likes : most_liked_data[i].likes.count,
-                comments:most_liked_data[i].comments.count,
-                url : most_liked_data[i].images.standard_resolution.url
-                }
-                liked_media[i]= most_liked_media;
-            }
-            for(i=0; i<most_commented_data.length; i++){
-                most_commented_media = {
-                likes : most_commented_data[i].likes.count,
-                comments : most_commented_data[i].comments.count,
-                url : most_commented_data[i].images.standard_resolution.url
-                }
-                commented_media[i]= most_commented_media;
-            }
-            popular_media = {
-                'most_liked_media' : liked_media,
-                'most_commented_media' : commented_media
-            }
+            let most_liked_data = getmostlikedmedia(medias);
+            let most_commented_data = getmostcommentedmedia(medias);
+            let popular_data = most_liked_data.sort(function(a, b){return b.likes.count - a.comments.count});
             return data={
-                'most_popular_media' : popular_media,
-                'most_liked_media' : liked_media,
-                'most_commented_media' : commented_media
+                'most_popular_media' : popular_data,
+                'most_liked_media' : most_liked_data,
+                'most_commented_media' : most_commented_data
             };
         }
     }
-  
-// to count maximum count of like and
-    function countMax(medias){
-        var highestValuelike = 0;
-        var highestValuecomment = 0;
-        for (var i=0, len = medias.length; i<len; i++) {
-          var likeValue = Number(medias[i].likes.count);
-          var commentValue = Number(medias[i].comments.count);
-          if (likeValue > highestValuelike) {
-            highestValuelike = likeValue;
-          }
-          if (commentValue > highestValuecomment) {
-            highestValuecomment = commentValue;
+    function getmostlikedmedia(medias){
+        let liked_media = [];
+        medias.sort(function(a, b){return b.likes.count - a.likes.count}); 
+        for(i=0; i<medias.length; i++){
+            most_liked_media = {
+            likes : medias[i].likes.count,
+            comments:medias[i].comments.count,
+            url : medias[i].images.standard_resolution.url
+            }
+            liked_media[i]= most_liked_media;
         }
-        } return highestValue={
-            "likecount" : highestValuelike,
-            "commentcount" : highestValuecomment
-        };
-    } 
-// end of countMax function
-
-
+        return liked_media;
+    }
+    function getmostcommentedmedia(medias){
+        let commented_media = [];
+        medias.sort(function(a, b){return b.comments.count - a.comments.count});             
+        for(i=0; i<medias.length; i++){
+            most_commented_media = {
+            likes : medias[i].likes.count,
+            comments : medias[i].comments.count,
+            url : medias[i].images.standard_resolution.url
+            }
+            commented_media[i]= most_commented_media;
+        }
+        return commented_media;     
+    }

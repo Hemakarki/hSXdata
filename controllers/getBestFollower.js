@@ -28,18 +28,46 @@ exports.getBestFollower = function(req, res, next) {
                 let mediaObj = [];
                  getUsersLiked(medias)
                     .then((userLiked) =>{
-                        return userLiked.userdata
+                        return userLiked;
                     } )
-                    .then((data) => {
+                    .then((likedata) => {
                         getUserCommented(medias)
-                        .then((commentdata) => {
-                            return res.status(200).send({
-                                 'status':200,
-                                 'messageId' : 200,
-                                 'most_likes_to_me' : data,
-                                 'most_comment_to_me' : commentdata
-                            })
+                        .then((commentdata) => { 
+                            let collectivedata ={
+                                'likedata': likedata,
+                                'commentdata': commentdata
+                            }
+                            return collectivedata; 
                         })
+                        .then((data) =>{
+                            let commentdata = data.commentdata;
+                            let likedata= data.likedata;
+                            let  commondata = likedata.slice(0);
+                            for (var i = 0 ; i < commondata.length ; i++){
+                              for (var j = 0; j < commentuser.length ; j++){
+                                if (commondata[i].username == commentuser[j].username){
+                                    commondata[i].likes = likedata[j].likes;
+                                    commondata[i].comments = commentuser[j].comments;
+                                    commondata[i].url = commentuser[j].url;
+                                }
+                              };  
+                            };
+                            // let likeduser = {
+                            //     "full_name": data.likedata.full_name,
+                            //     "url": data.likedata.url,
+                            //     "likes": data.likedata.likes
+                            // }
+                            let best_followers ={
+                                'most_likes_to_me' : data.likedata,
+                                'most_comment_to_me' : commentdata,
+                                'most_likes_&_comments' : commondata
+                            }
+                            return res.status(200).send({
+                                'status':200,
+                                'messageId' : 200,
+                                'best_followers' : best_followers
+                           })
+                        }) 
                     })
                     .catch((err) => {
                         return err;
@@ -49,11 +77,24 @@ exports.getBestFollower = function(req, res, next) {
             });
         }
     }
-
+function coommonUsers(likeuser, commentuser){
+    let  commondata = likeuser.slice(0);
+    for (var i = 0 ; i < commondata.length ; i++){
+      for (var j = 0; j < commentuser.length ; j++){
+        if (commondata[i].username == commentuser[j].username){
+            commondata[i].likes = likeuser[j].likes;
+            commondata[i].comments = commentuser[j].comments;
+            commondata[i].url = commentuser[j].url;
+        }
+      };  
+    };
+    return commondata;
+}
 function getUsersLiked(medias){
   let likeddata=[];
   let newMediaCount =[]
   let media_id =[];
+  let Users = [];
   medias.forEach(function(media){
     media_id.push(media.id);
    });
@@ -79,7 +120,18 @@ function getUsersLiked(medias){
                         }
                     })
                     if( i == len-1){
-                        resolve(countMax(newMediaCount));
+                        newMediaCount.sort(function(a, b){return b.count - a.count});
+                        for(let j=0; j<newMediaCount.length; j++){
+                            most_liked_users = {
+                                'full_name' : newMediaCount[j].userData.full_name,
+                                'url' : newMediaCount[j].userData.profile_picture,
+                                'likes' : newMediaCount[j].count
+                            }
+                            Users[j]= most_liked_users;
+                            if( j == newMediaCount.length-1){
+                                resolve(Users);
+                            }
+                        }
                     }
                 }
             });
@@ -90,6 +142,7 @@ function getUserCommented(medias){
     let commentedData =[];
     let newMediaCount =[]
     let media_id =[];
+    let Users = [];
     medias.forEach(function(media){
       media_id.push(media.id);
      });
@@ -101,52 +154,33 @@ function getUserCommented(medias){
                     reject (err);
                   }else{
                       result.filter(function(el){
-                          let avilableIndex = commentedData.indexOf(el.id);
+                          let avilableIndex = commentedData.indexOf(el.from.id);
                           if(avilableIndex == -1){
-                            commentedData.push(el.id)
-                             newMediaCount.push({"userId": el.id,"count":1,"userData":el})
+                            commentedData.push(el.from.id)
+                             newMediaCount.push({"userId": el.from.id,"count":1,"userData":el})
                           }
                           else if(avilableIndex == 0 || avilableIndex == 1){
                               newMediaCount.forEach(function(item){
-                                  if(item.userId == el.id ){
+                                  if(item.userId == el.from.id ){
                                     item.count = item.count +1 ;
                                   }
                               })
                           }
                       })
                       if(i == len-1){
-                        resolve(countMax(newMediaCount));
+                        newMediaCount.sort(function(a, b){return b.count - a.count});
+                        for(i=0; i<newMediaCount.length; i++){
+                            most_commented_users = {
+                                'full_name' : newMediaCount[i].userData.from.full_name,
+                                'url' : newMediaCount[i].userData.from.profile_picture,
+                                'comments' : newMediaCount[i].count
+                            }
+                            Users[i]= most_commented_users;
+                        }
+                        resolve(Users);
                       }
                   }
             });
         }
     })
 }
-
-function countMax(userInfo){
-    let userdata= [];
-    var highestValue = 0;
-    for (var i=0, len = userInfo.length; i<len; i++) {
-      var countValue = Number(userInfo[i].count);
-      if (countValue > highestValue) {
-        highestValue = countValue;
-         userdata = userInfo[i];
-      }
-    } return maxValue={
-        "userdata" : userdata
-    };
-}
-
-// function countcommentMax(userInfo){
-//     let userdata= [];
-//     var highestValue = 0;
-//     for (var i=0, len = userInfo.length; i<len; i++) {
-//       var countValue = Number(userInfo[i].count);
-//       if (countValue > highestValue) {
-//         highestValue = countValue;
-//          userdata = userInfo[i];
-//       }
-//     } return maxValue={
-//         "userdata" : userdata
-//     };
-// }

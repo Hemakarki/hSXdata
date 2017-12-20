@@ -5,12 +5,12 @@ module.exports = function(app, express) {
   let getUserController = require('../controllers/getUser');
   let getMediaInsightController = require('../controllers/getMediaInsight')
   let getBestFollowerController = require('../controllers/getBestFollower');
-  let getHistoryController = require('../controllers/getHistory');
+  let getHistoryDetailsController = require('../controllers/getHistoryDetails');
 
   app.post('/getUsers', getUserController.getUser);
   app.post('/getMediaInsight', getMediaInsightController.getMediaDetails);
   app.post('/getBestFollower',getBestFollowerController.getBestFollower);
-  app.post('/getHistory',getHistoryController.getHistory);
+  app.post('/getHistoryDetails',getHistoryDetailsController.getHistoryDetails);
   
   app.post('/test', getUserController.getMessage);
 
