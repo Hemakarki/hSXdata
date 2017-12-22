@@ -17,6 +17,7 @@ exports.getHistoryDetails = function(req, res, next) {
         let userId = req.body.access_token.split('.')[0];
         let latest_followers = [];
         let lost_followers = [];
+        
         ig.user_followers(userId, function(err, users, pagination, remaining, limit) {
           if(err) {
             return res.status(401).send({
@@ -25,24 +26,45 @@ exports.getHistoryDetails = function(req, res, next) {
                'message': err
            });
           }else{
-            let earliest_followers = getErliestFollowers(users);
-            return res.send({
-              'earliest_followers':earliest_followers
+            console.log(users,"users");
+            let historyData = gethistory(users);
+
+            return res.status(200).send({
+              'status':200,
+              'messageId' : 200,
+              'history':historyData
             });
           }
         });
       }
     }
 
-// function to find the earliest followers 
-function getErliestFollowers(users, followers) {
+// function to find the Latest followers
+function gethistory(users){
+  var latest_followers = [];
   let earliest_followers = [];
+  let lost_followers =[];
+  let users_unfollowed =[];
   users.forEach(function(user){
     let filteredFollowers = {
-      'full_name' : user.full_name, 
+      'name' : user.full_name, 
       'url' : user.profile_picture
     }
-    earliest_followers.push(filteredFollowers);
+    latest_followers.push(filteredFollowers);
   });
-  return earliest_followers;
+  earliest_followers=latest_followers.slice().reverse();
+  return history={
+    'latest_followers':latest_followers,
+    'earliest_followers' : earliest_followers,
+    'All_lost_followers' : lost_followers,
+    'users_unfollowed' : users_unfollowed
+  }
 }
+
+
+// function to find the earliest followers 
+// function getErliestFollowers(latest_followers) {
+//   let earliest_followers = [];
+//   earliest_followers=latest_followers.reverse();
+//   return earliest_followers;
+// }

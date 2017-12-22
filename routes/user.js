@@ -6,12 +6,17 @@ module.exports = function(app, express) {
   let getMediaInsightController = require('../controllers/getMediaInsight')
   let getBestFollowerController = require('../controllers/getBestFollower');
   let getHistoryDetailsController = require('../controllers/getHistoryDetails');
+  let getSecretAdmirersController = require ('../controllers/getSecretAdmirers');
+  let discoverUsersController = require('../controllers/discoverUsers');
 
-  app.post('/getUsers', getUserController.getUser);
+  app.post('/getUserDetail', getUserController.getUserDetail);
+  app.post('/UserDetail', getUserController.UserDetail);
+  
   app.post('/getMediaInsight', getMediaInsightController.getMediaDetails);
   app.post('/getBestFollower',getBestFollowerController.getBestFollower);
   app.post('/getHistoryDetails',getHistoryDetailsController.getHistoryDetails);
+  app.post('/getSecretAdmirers',getSecretAdmirersController.getSecretAdmirers);
+  app.post('/discoverUsers',discoverUsersController.discoverUsers);
   
-  app.post('/test', getUserController.getMessage);
 
 }

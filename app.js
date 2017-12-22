@@ -1,15 +1,21 @@
-var express   = require('express');
-var app       = express();
-var bodyParser= require('body-parser');
-var morgan    = require('morgan');
-var mongoose  = require('mongoose');
-var apiRoutes = express.Router(); 
-var jwt       = require('jsonwebtoken');
-var config    = require('./config'); 
-var User      = require('./models/user'); 
+let express   = require('express');
+let app       = express();
+let bodyParser= require('body-parser');
+let morgan    = require('morgan');
+let mongoose  = require('mongoose');
+let apiRoutes = express.Router(); 
+let jwt       = require('jsonwebtoken');
+let config    = require('./config'); 
+let  db       = require('./config');
+let port = process.env.PORT || 8080; 
 
-var port = process.env.PORT || 8080; 
-mongoose.connect(config.database); 
+// mongoose.createConnection("mongodb://localhost/InstagramReportApp",{
+//     useMongoClient: true});
+
+// connect to our mongoDB database 
+mongoose.Promise = global.Promise;
+mongoose.connect(db.database,{useMongoClient: true}); 
+
 app.set('superSecret', config.secret);
 
 app.use(bodyParser.urlencoded({ extended: false }));

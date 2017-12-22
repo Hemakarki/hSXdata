@@ -1,3 +1,22 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 let constantObj = require("../constants.js");
 let instagramCredentials = constantObj.configInstagram;
 let Promise         = require('bluebird');
@@ -7,6 +26,7 @@ ig.use(instagramCredentials);
 
 
 exports.getBestFollower = function(req, res, next) {
+    console.log('here')
     if (!req.body.access_token) {
         return  res.status(400).send({
           'status': '400',
@@ -25,7 +45,8 @@ exports.getBestFollower = function(req, res, next) {
                    'message': err
                });
             }else{
-                let mediaObj = [];
+                let mediaObj = [];  
+                
                  getUsersLiked(medias)
                     .then((userLiked) =>{
                         return userLiked;
@@ -42,21 +63,7 @@ exports.getBestFollower = function(req, res, next) {
                         .then((data) =>{
                             let commentdata = data.commentdata;
                             let likedata= data.likedata;
-                            let  commondata = likedata.slice(0);
-                            for (var i = 0 ; i < commondata.length ; i++){
-                              for (var j = 0; j < commentuser.length ; j++){
-                                if (commondata[i].username == commentuser[j].username){
-                                    commondata[i].likes = likedata[j].likes;
-                                    commondata[i].comments = commentuser[j].comments;
-                                    commondata[i].url = commentuser[j].url;
-                                }
-                              };  
-                            };
-                            // let likeduser = {
-                            //     "full_name": data.likedata.full_name,
-                            //     "url": data.likedata.url,
-                            //     "likes": data.likedata.likes
-                            // }
+                            let  commondata = coommonUsers(likedata, commentdata);
                             let best_followers ={
                                 'most_likes_to_me' : data.likedata,
                                 'most_comment_to_me' : commentdata,
@@ -77,8 +84,9 @@ exports.getBestFollower = function(req, res, next) {
             });
         }
     }
+
 function coommonUsers(likeuser, commentuser){
-    let  commondata = likeuser.slice(0);
+    let  commondata = likeuser.slice();
     for (var i = 0 ; i < commondata.length ; i++){
       for (var j = 0; j < commentuser.length ; j++){
         if (commondata[i].username == commentuser[j].username){
@@ -90,21 +98,22 @@ function coommonUsers(likeuser, commentuser){
     };
     return commondata;
 }
+
 function getUsersLiked(medias){
-  let likeddata=[];
   let newMediaCount =[]
-  let media_id =[];
   let Users = [];
+  let likeddata=[];
+  let media_id =[];
   medias.forEach(function(media){
-    media_id.push(media.id);
-   });
+      media_id.push(media.id);
+  });
   let len = media_id.length;
     return  new Promise((resolve, reject) => {
         for(let i=0; i<len; i++){
             ig.likes(media_id[i], function(err, result) {
                 if(err){
                     resolve(err);
-                }else{
+                }else{                   
                     result.filter(function(el){
                         let avilableIndex = likeddata.indexOf(el.id);
                         if(avilableIndex == -1){
