@@ -1,9 +1,10 @@
 let async = require('async');
-var userObj = require('../models/user');
-var constantObj = require("../constants.js");
-var instagramCredentials = constantObj.configInstagram;
+let User = require('../models/user');
+let Media = require ('../models/userMedia');
+let constantObj = require("../constants.js");
+let instagramCredentials = constantObj.configInstagram;
 
-var ig = require('instagram-node').instagram();
+let ig = require('instagram-node').instagram();
 ig.use(instagramCredentials);
 
 exports.getUserDetail = function(req, res) { 
@@ -383,7 +384,7 @@ exports.UserDetail = function(req, res) {
                 return res.status(401).jsonp(outputJSON)
             }else{
                 var obj = {
-                    'user_id':result.id,
+                    'user_instagram_id':result.id,
                     'username': result.username, 
                     'full_name': result.full_name, 
                     'profile_picture' : result.profile_picture, 
@@ -391,8 +392,8 @@ exports.UserDetail = function(req, res) {
                     'follows_count': result.counts.follows, 
                     'followed_by_count' : result.counts.follows
                 };
-                userObj.findOne({
-                    'user_id': result.id}, function(err, data) {
+                User.findOne({
+                    'user_instagram_id': result.id}, function(err, data) {
                         if (err) {
                             var outputJSON = {
                               "status": 401,
@@ -401,10 +402,8 @@ exports.UserDetail = function(req, res) {
                             }
                             return res.status(401).jsonp(outputJSON)
                         }else if(data == null){
-                            console.log("should not be heere")
-                            userObj.remove({'_id': obj.user_id },function(err) {
+                            User.remove({'_id': obj.user_instagram_id },function(err) {
                                 let saveduser= saveUser(obj);
-                                console.log(saveduser,"result")
                                 if (saveduser == 'undefined'){
                                     var outputJSON = {
                                         "status": 401,
@@ -412,50 +411,152 @@ exports.UserDetail = function(req, res) {
                                         "message": "User Not saved.",
                                         "err": err
                                     }
-                                    return res.status(200).jsonp(outputJSON)
-                                  }else{
+                                return res.status(200).jsonp(outputJSON)
+                                }else{
                                     var outputJSON = {
                                         "status": 200,
                                         "messageId": 200,
                                         "message": "User successfully saved.",
                                         "data": saveduser
                                     }
-                                    return res.status(200).jsonp(outputJSON)
-                                  }
+                                return res.status(200).jsonp(outputJSON)
+                                }
                             })
                         }else{
-                            console.log("should be here")
-                                userObj.update(
-                                    { _id: userObj._id},{ $set: {$set: obj}},function(err, data) {
-                                    if (err) {
-                                        var outputJSON = {
-                                            "status": 401,
-                                            "messageId": 401,
-                                            "message": "User Not updated.",
-                                            "err": err
-                                        }
-                                        return res.status(200).jsonp(outputJSON)
-                                    }else{
-                                        var outputJSON = {
-                                            "status": 200,
-                                            "messageId": 200,
-                                            "message": "User successfully updated.",
-                                            "data": data
-                                        }
-                                        return res.status(200).jsonp(outputJSON)
-                                    }
-                                })
+                            User.update(
+                            { _id: User._id},{ $set: {$set: obj}},function(err, data) {
+                            if (err) {
+                                var outputJSON = {
+                                    "status": 401,
+                                    "messageId": 401,
+                                    "message": "User Not updated.",
+                                    "err": err
+                                }
+                            return res.status(200).jsonp(outputJSON)
+                            }else{
+                                var outputJSON = {
+                                    "status": 200,
+                                    "messageId": 200,
+                                    "message": "User successfully updated.",
+                                    "data": data
+                                }
+                                return res.status(200).jsonp(outputJSON)
                             }
                         })
                     }
                 })
             }
-        }
+        })
+    }
+}
 
 let saveUser = function(obj) {
-  userObj(obj).save(obj, function(err, result) {
-    if (err) {
-        return err;
-    }
-  })
-}
+    userObj(obj).save(obj, function(err, result) {
+      if (err) {
+          return err;
+      }
+    })
+  }
+
+// exports.mediaDetails = function(req, res){
+//     if (!req.body.access_token) {
+//       return  res.status(400).send({
+//         'status': 401,
+//         'messageId': 400,
+//         'message': 'please enter access token.'
+//       });
+//     }else{ 
+//         var access_token = req.body.access_token;
+//         var userId = req.body.access_token.split('.')[0];
+//         ig.use({ access_token: access_token });
+//         ig.user_media_recent(userId, [], function(err, medias, pagination, remaining, limit) {
+//             if(err) {
+//                 var outputJSON = {
+//                     "status": 401,
+//                     "messageId": 401,
+//                     "message": err
+//                 }
+//                 return res.status(401).jsonp(outputJSON)
+//             }else{
+//                 var mediaObj = {
+//                     'media_id' : media.id,
+//                     'type' : media.type ,
+//                     'caption' : media.caption,
+//                     'tags' : media.tags,
+//                     'filter' : media.filter,
+//                     'location' : media.location,
+//                     'attribution' : media.attribution,
+//                     'users_in_photo' : media.users_in_photo,
+//                     'likes' : media.likes.count,
+//                     'comments' : media.comments.count,
+//                     'low_resolution_url' : media.images.low_resolution,
+//                     'thumbnail_url' : media.images.thumbnail,
+//                     'standard_resolution_url' : media.images.standard_resolution,
+//                     'user_id' : User._id
+//                 } 
+//                 Media.findOne({
+//                     'media_id': media.id}, function(err, data) {                       
+//                         if (err) {
+//                             var outputJSON = {
+//                               "status": 401,
+//                               "messageId": 401,
+//                               "message": "Something went wrong."
+//                             }
+//                              res.status(401).jsonp(outputJSON)
+//                         }else if(data == null){
+//                             Media.remove({'media_id': mediaObj.media_id },function(err) {
+//                             let mediasaved= savemedia(mediaObj);
+//                             if (mediasaved == 'undefined'){
+//                                 var outputJSON = {
+//                                     "status": 401,
+//                                     "messageId": 401,
+//                                     "message": "Media Not saved.",
+//                                     "err": err
+//                                 }
+//                              return res.status(200).jsonp(outputJSON)
+//                             }else{
+//                                 var outputJSON = {
+//                                     "status": 200,
+//                                     "messageId": 200,
+//                                     "message": "Media successfully saved.",
+//                                     "data": mediasaved
+//                                 }
+//                              res.status(200).jsonp(outputJSON)
+//                             }
+//                         })
+//                         }else{
+//                             Media.update(
+//                             { _id: Media._id},{ $set: {$set: mediaObj}},function(err, data) {
+//                             if (err) {
+//                                 var outputJSON = {
+//                                     "status": 401,
+//                                     "messageId": 401,
+//                                     "message": "User Not updated.",
+//                                     "err": err
+//                                 }
+//                              res.status(200).jsonp(outputJSON)
+//                             }else{
+//                                 var outputJSON = {
+//                                     "status": 200,
+//                                     "messageId": 200,
+//                                     "message": "User successfully updated.",
+//                                     "data": data
+//                                 }
+//                                  res.status(200).jsonp(outputJSON)
+//                             }
+//                         })
+//                     }
+//                 })
+//             }     
+//         })
+//     }
+// }
+
+// let savemedia = function(obj) {
+//     console.log(obj,"save ")
+//     Media(obj).save(obj, function(err, result) {
+//       if (err) {
+//           return err;
+//       }
+//     })
+//   }

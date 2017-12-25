@@ -3,7 +3,7 @@ let mongoose = require('mongoose');
 let Schema = mongoose.Schema;
 
 let userSchema = Schema({
-    user_id : {
+    user_instagram_id : {
 	    type: String
 	  },
     username : {
