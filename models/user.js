@@ -13,7 +13,8 @@ let userSchema = Schema({
       type : String
     },
     profile_picture : {
-       type : String},
+       type : String
+    },
     media_count : {
        type: Number
     },

@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var mediaLikeSchema = new mongoose.Schema({
     media_id : {
         type: Number, 
-        ref : 'user_media', 
+        ref : 'user_medias', 
         require : true
     },
     liked_by : {

@@ -452,111 +452,98 @@ exports.UserDetail = function(req, res) {
 
 let saveUser = function(obj) {
     userObj(obj).save(obj, function(err, result) {
-      if (err) {
-          return err;
-      }
+        if (err) {
+            return err;
+        }
     })
-  }
+}
 
-// exports.mediaDetails = function(req, res){
-//     if (!req.body.access_token) {
-//       return  res.status(400).send({
-//         'status': 401,
-//         'messageId': 400,
-//         'message': 'please enter access token.'
-//       });
-//     }else{ 
-//         var access_token = req.body.access_token;
-//         var userId = req.body.access_token.split('.')[0];
-//         ig.use({ access_token: access_token });
-//         ig.user_media_recent(userId, [], function(err, medias, pagination, remaining, limit) {
-//             if(err) {
-//                 var outputJSON = {
-//                     "status": 401,
-//                     "messageId": 401,
-//                     "message": err
-//                 }
-//                 return res.status(401).jsonp(outputJSON)
-//             }else{
-//                 var mediaObj = {
-//                     'media_id' : media.id,
-//                     'type' : media.type ,
-//                     'caption' : media.caption,
-//                     'tags' : media.tags,
-//                     'filter' : media.filter,
-//                     'location' : media.location,
-//                     'attribution' : media.attribution,
-//                     'users_in_photo' : media.users_in_photo,
-//                     'likes' : media.likes.count,
-//                     'comments' : media.comments.count,
-//                     'low_resolution_url' : media.images.low_resolution,
-//                     'thumbnail_url' : media.images.thumbnail,
-//                     'standard_resolution_url' : media.images.standard_resolution,
-//                     'user_id' : User._id
-//                 } 
-//                 Media.findOne({
-//                     'media_id': media.id}, function(err, data) {                       
-//                         if (err) {
-//                             var outputJSON = {
-//                               "status": 401,
-//                               "messageId": 401,
-//                               "message": "Something went wrong."
-//                             }
-//                              res.status(401).jsonp(outputJSON)
-//                         }else if(data == null){
-//                             Media.remove({'media_id': mediaObj.media_id },function(err) {
-//                             let mediasaved= savemedia(mediaObj);
-//                             if (mediasaved == 'undefined'){
-//                                 var outputJSON = {
-//                                     "status": 401,
-//                                     "messageId": 401,
-//                                     "message": "Media Not saved.",
-//                                     "err": err
-//                                 }
-//                              return res.status(200).jsonp(outputJSON)
-//                             }else{
-//                                 var outputJSON = {
-//                                     "status": 200,
-//                                     "messageId": 200,
-//                                     "message": "Media successfully saved.",
-//                                     "data": mediasaved
-//                                 }
-//                              res.status(200).jsonp(outputJSON)
-//                             }
-//                         })
-//                         }else{
-//                             Media.update(
-//                             { _id: Media._id},{ $set: {$set: mediaObj}},function(err, data) {
-//                             if (err) {
-//                                 var outputJSON = {
-//                                     "status": 401,
-//                                     "messageId": 401,
-//                                     "message": "User Not updated.",
-//                                     "err": err
-//                                 }
-//                              res.status(200).jsonp(outputJSON)
-//                             }else{
-//                                 var outputJSON = {
-//                                     "status": 200,
-//                                     "messageId": 200,
-//                                     "message": "User successfully updated.",
-//                                     "data": data
-//                                 }
-//                                  res.status(200).jsonp(outputJSON)
-//                             }
-//                         })
-//                     }
-//                 })
-//             }     
-//         })
-//     }
-// }
+exports.mediaDetails = function(req, res){
+        var access_token = req.body.access_token;
+        var userId = req.body.access_token.split('.')[0];
+        ig.use({ access_token: access_token });
+        ig.user_media_recent(userId, [], function(err, medias, pagination, remaining, limit) {
+            if(err) {
+                var outputJSON = {
+                    "status": 401,
+                    "messageId": 401,
+                    "message": err
+                }
+                return res.status(401).jsonp(outputJSON)
+            }else{
+                let user_media= [];
+                medias.forEach(function(media){
+                    var mediaObj = {
+                        'media_id' : media.id,
+                        'type' : media.type ,
+                        'caption' : media.caption,
+                        'tags' : media.tags,
+                        'filter' : media.filter,
+                        'location' : media.location,
+                        'attribution' : media.attribution,
+                        'users_in_photo' : media.users_in_photo,
+                        'likes' : media.likes.count,
+                        'comments' : media.comments.count,
+                        'low_resolution_url' : media.images.low_resolution,
+                        'thumbnail_url' : media.images.thumbnail,
+                        'standard_resolution_url' : media.images.standard_resolution,
+                        'user_id' : userId
+                    }
+                    user_media.push(mediaObj);
+                Media.findOne({
+                    'media_id': media.id}, function(err, data) {                       
+                        if (err) {
+                            var outputJSON = {
+                              "status": 401,
+                              "messageId": 401,
+                              "message": "Something went wrong."
+                            }
+                             res.status(401).jsonp(outputJSON)
+                        }else if(data == null){
+                            
+                            Media.remove({'media_id': mediaObj.media_id },function(err) {
+                                let mediasaved= savemedia(user_media);
+                            })
+                        }else{
+                            Media.update(
+                            { _id: media._id},{ $set: {$set: mediaObj}},function(err, data) {
+                            if (err) {
+                                var outputJSON = {
+                                    "status": 401,
+                                    "messageId": 401,
+                                    "message": "User Not updated.",
+                                    "err": err
+                                }
+                             res.status(401).jsonp(outputJSON)
+                            }else{
+                                var outputJSON = {
+                                    "status": 200,
+                                    "messageId": 200,
+                                    "message": "User successfully updated.",
+                                    "data": data
+                                }
+                                res.status(200).jsonp(outputJSON)
+                            }
+                        })
+                    }
+                })
+            });
+            var outputJSON = {
+               "status": 200,
+               "messageId": 200,
+               "message": "Media successfully saved."
+            }
+            res.status(200).jsonp(outputJSON);
+        }     
+    })
+}
 
-// let savemedia = function(obj) {
-//     console.log(obj,"save ")
-//     Media(obj).save(obj, function(err, result) {
-//       if (err) {
-//           return err;
-//       }
-//     })
-//   }
+let savemedia = function(user_medias) {
+    user_medias.forEach(function(media){
+        Media(user_medias).save(media, function(err, result) {
+          if (err) {
+              return err;
+          }         
+        })  
+    });
+}

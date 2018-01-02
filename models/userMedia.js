@@ -1,7 +1,8 @@
 var mongoose = require('mongoose');
 var userMediaSchema = new mongoose.Schema({
     media_id : {
-        type: String
+        type: String,
+        require : true
     },
     user_id : {
         type: Object, 
@@ -9,41 +10,53 @@ var userMediaSchema = new mongoose.Schema({
         require : true
     },
     type : {
-        type : String
+        type : String, 
+        require : true
     },
     caption : {
-        type : String
+        type : Object, 
+        require : true
     },
     tags : {
-        type : String
+        type : Array, 
+        require : true
     },
     filter : {
-        type : String
+        type : String, 
+        require : true
     },
     location : {
-        typr : String
+        type : Object, 
+        require : true
     },
     attribution : {
-        type : String
+        type : Object, 
+        require : true
     },
     users_in_photo : {
-        type : Array
+        type : Array, 
+        require : true
     },
     likes : {
-        type : Number
+        type : Number, 
+        require : true
     },
     comments : {
-        type : Number
+        type : Number, 
+        require : true
     },
     low_resolution_url : { 
-        type : String
+        type : String, 
+        require : true
     },
     thumbnail_url : { 
-        type : String
+        type : String, 
+        require : true
     },
     standard_resolution_url : {
-         type : String
-        },
+         type : String, 
+         require : true
+    },
     created_time : {
         type : Number
     },

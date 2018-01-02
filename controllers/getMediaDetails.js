@@ -103,5 +103,4 @@ exports.getMediaDetails = function(req, res, next) {
             };
         }
     }
-    console.log("hema ;)")
 }
