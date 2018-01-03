@@ -383,7 +383,7 @@ exports.UserDetail = function(req, res) {
                 }
                 return res.status(401).jsonp(outputJSON)
             }else{
-                var obj = {
+                let obj = {
                     'user_instagram_id':result.id,
                     'username': result.username, 
                     'full_name': result.full_name, 
@@ -475,7 +475,7 @@ exports.mediaDetails = function(req, res){
                 medias.forEach(function(media){
                     var mediaObj = {
                         'media_id' : media.id,
-                        'type' : media.type ,
+                        'media_type' : media.type ,
                         'caption' : media.caption,
                         'tags' : media.tags,
                         'filter' : media.filter,
@@ -484,66 +484,42 @@ exports.mediaDetails = function(req, res){
                         'users_in_photo' : media.users_in_photo,
                         'likes' : media.likes.count,
                         'comments' : media.comments.count,
-                        'low_resolution_url' : media.images.low_resolution,
-                        'thumbnail_url' : media.images.thumbnail,
-                        'standard_resolution_url' : media.images.standard_resolution,
-                        'user_id' : userId
+                        'low_resolution_url' : media.images.low_resolution.url,
+                        'thumbnail_url' : media.images.thumbnail.url,
+                        'standard_resolution_url' : media.images.standard_resolution.url,
+                        'user_id':media.user.id
                     }
-                    user_media.push(mediaObj);
-                Media.findOne({
-                    'media_id': media.id}, function(err, data) {                       
-                        if (err) {
-                            var outputJSON = {
-                              "status": 401,
-                              "messageId": 401,
-                              "message": "Something went wrong."
-                            }
-                             res.status(401).jsonp(outputJSON)
-                        }else if(data == null){
-                            
-                            Media.remove({'media_id': mediaObj.media_id },function(err) {
-                                let mediasaved= savemedia(user_media);
-                            })
-                        }else{
-                            Media.update(
-                            { _id: media._id},{ $set: {$set: mediaObj}},function(err, data) {
-                            if (err) {
-                                var outputJSON = {
-                                    "status": 401,
-                                    "messageId": 401,
-                                    "message": "User Not updated.",
-                                    "err": err
-                                }
-                             res.status(401).jsonp(outputJSON)
-                            }else{
-                                var outputJSON = {
-                                    "status": 200,
-                                    "messageId": 200,
-                                    "message": "User successfully updated.",
-                                    "data": data
-                                }
-                                res.status(200).jsonp(outputJSON)
-                            }
-                        })
-                    }
-                })
+                user_media.push(mediaObj);
             });
-            var outputJSON = {
-               "status": 200,
-               "messageId": 200,
-               "message": "Media successfully saved."
+            let saveddata=savemedia(user_media);
+            if (saveddata!='undefined'){
+                var outputJSON = {
+                    "status": 200,
+                    "messageId": 200,
+                    "message": "Successful."
+                }
+                res.status(200).jsonp(outputJSON)
             }
-            res.status(200).jsonp(outputJSON);
-        }     
-    })
+        }
+    });
 }
 
-let savemedia = function(user_medias) {
-    user_medias.forEach(function(media){
-        Media(user_medias).save(media, function(err, result) {
-          if (err) {
-              return err;
-          }         
-        })  
+let savemedia = function(user_media) {
+    user_media.forEach(function(media, index){
+        Media.find( function (err, docs) {
+             if ( docs.length == 0){
+                Media(media).save(media, function(err, result) {
+                    if (err) {
+                        return err;
+                    }        
+                }) 
+            }else{ 
+                Media.update({_id:docs[0]._id},{$set:media},function(err,data){
+                    if (err) {
+                        return err;
+                    } 
+                })           
+            }
+        });
     });
 }

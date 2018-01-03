@@ -1,22 +1,4 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+let MediaLike = require('../models/mediaLike');
 let constantObj = require("../constants.js");
 let instagramCredentials = constantObj.configInstagram;
 let Promise         = require('bluebird');
@@ -26,7 +8,6 @@ ig.use(instagramCredentials);
 
 
 exports.getBestFollower = function(req, res, next) {
-    console.log('here')
     if (!req.body.access_token) {
         return  res.status(400).send({
           'status': '400',
@@ -46,9 +27,9 @@ exports.getBestFollower = function(req, res, next) {
                });
             }else{
                 let mediaObj = [];  
-                
                  getUsersLiked(medias)
                     .then((userLiked) =>{
+                        console.log(userLiked,"liked")
                         return userLiked;
                     } )
                     .then((likedata) => {
@@ -98,7 +79,6 @@ function coommonUsers(likeuser, commentuser){
     };
     return commondata;
 }
-
 function getUsersLiked(medias){
   let newMediaCount =[]
   let Users = [];
@@ -191,5 +171,55 @@ function getUserCommented(medias){
                   }
             });
         }
+    })
+}
+
+exports.mediaLike = function(req, res, next){
+    if (!req.body.access_token) {
+        return  res.status(400).send({
+          'status': 401,
+          'messageId': 400,
+          'message': 'please enter access token.'
+        });
+      }else{ 
+          var access_token = req.body.access_token;
+          var userId = req.body.access_token.split('.')[0];
+          ig.use({ access_token: access_token });
+          ig.user_media_recent(userId, [], function(err, medias) {
+            if(err) {
+                return res.status(401).send({
+                   'status': 401,
+                   'messageId': 401,
+                   'message': err
+               });
+            }else{
+                let mediaData = [];
+                let i = 0;
+                medias.forEach(function(media){
+                ig.likes(media.id, function(err, result,cb) {
+                    console.log(media.id,"medias[i].id",i,"&&&&&&&", result)
+                    let len =  result.length;
+                    if(result!= []){
+                        let mediaLikeObj = {
+                            'media_id' : media.id,
+                            'liked_by' : [{
+                                'full_name':result[i].full_name,
+                                'url': result[i].profile_picture
+                            }],
+                        }
+                        if(i!= len){
+                            i++;
+                            mediaData.push(mediaLikeObj);
+                            cb(null);
+                        }
+                    }
+                });
+            });
+            console.log(mediaData,"mejdajsljlj")   
+            }
+        });
+    }
+    MediaLike.find(function(err, docs){
+        console.log(docs,"here")
     })
 }

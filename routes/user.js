@@ -12,7 +12,7 @@ module.exports = function(app, express) {
   app.post('/getUserDetail', getUserController.getUserDetail);
   app.post('/UserDetail', getUserController.UserDetail);
   app.post('/mediaDetails', getUserController.mediaDetails);
-  
+  app.post('/mediaLike', getBestFollowerController.mediaLike);
   app.post('/getMediaInsight', getMediaInsightController.getMediaDetails);
   app.post('/getBestFollower',getBestFollowerController.getBestFollower);
   app.post('/getHistoryDetails',getHistoryDetailsController.getHistoryDetails);

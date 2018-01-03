@@ -1,15 +1,17 @@
 var mongoose = require('mongoose');
+let user = require('../models/user');
+var Schema = mongoose.Schema,
+    ObjectId = Schema.ObjectId;
 var userMediaSchema = new mongoose.Schema({
     media_id : {
         type: String,
         require : true
     },
     user_id : {
-        type: Object, 
-        ref : 'user', 
+        type: String, 
         require : true
     },
-    type : {
+    media_type : {
         type : String, 
         require : true
     },
@@ -70,5 +72,5 @@ var userMediaSchema = new mongoose.Schema({
     }
 });
 
-var userMedia = mongoose.model('user_medias', userMediaSchema);
+var userMedia = mongoose.model('user_media', userMediaSchema);
 module.exports = userMedia;
