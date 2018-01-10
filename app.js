@@ -1,6 +1,7 @@
 let express   = require('express');
 let app       = express();
 let bodyParser= require('body-parser');
+let cors      = require('cors');
 let morgan    = require('morgan');
 let mongoose  = require('mongoose');
 let apiRoutes = express.Router(); 
@@ -17,7 +18,7 @@ mongoose.Promise = global.Promise;
 mongoose.connect(db.database,{useMongoClient: true}); 
 
 app.set('superSecret', config.secret);
-
+app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 

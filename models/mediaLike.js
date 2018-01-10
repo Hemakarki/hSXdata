@@ -10,7 +10,7 @@ var mediaLikeSchema = new mongoose.Schema({
             type : String,
             require : true
         },
-        url: {
+        profile_picture: {
             type : String,
             require : true
         }
