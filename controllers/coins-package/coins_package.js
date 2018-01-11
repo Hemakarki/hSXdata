@@ -1,7 +1,7 @@
 
-let Subscription = require('../../models/subscription');
+let CoinsPackage = require('../../models/coins_package');
 
-exports.getAllSubscriptions =  function (req, res, next){
+exports.getAllCoinsPackages =  function (req, res, next){
     let search = req.params.search;
     let sortBy = req.param.sortBy;
     let page = req.param.page;
@@ -19,10 +19,6 @@ exports.getAllSubscriptions =  function (req, res, next){
                 'like': '%' + search + '%'
             }
         }, {
-            description: {
-                'like': '%' + search + '%'
-            }
-        }, {
             package_validity: {
                 'like': '%' + search + '%'
             }
@@ -33,36 +29,31 @@ exports.getAllSubscriptions =  function (req, res, next){
         }
         ]
     }
-    Subscription.count(query).exec(function (err, total) {
+    CoinsPackage.count(query).exec(function (err, total) {
         if (err) {
             return res.status(400).send({
                 success: false,
                 error: err
             });
-        } else if(total == 0){
-            return res.status(204).send({
-                success: false,
-                msg:'No records found.'
-            })
         } else {
-            Subscription.find(query).sort(sortBy).skip(skipNo).limit(count).exec(function (err, subscriptions) {
+            CoinsPackage.find(query).sort(sortBy).skip(skipNo).limit(count).exec(function (err, CoinsPackage) {
                 if (err) {
                     return res.status(400).send({
                         success: false,
                         error: err
                     });
-                } else if(subscriptions || subscriptions.count) {
+                }else if(CoinsPackage || CoinsPackage.count) {
                     return res.send({
                         success: true,
                         data: {
-                            subscriptions: subscriptions,
+                            CoinsPackage: CoinsPackage,
                             total: total
                         },
                     });
-                } else{
+                } else {
                     return res.status(204).send({
                         success: false,
-                        msg:'No subscription records found.'
+                        msg:'No coin package records found.'
                     })
                 }
             })
@@ -70,9 +61,9 @@ exports.getAllSubscriptions =  function (req, res, next){
     })
 }
 
-exports.getSubscriptionById = function(req, res, next){
-    let subscriptionId = req.params.id;
-    Subscription.findById(subscriptionId).exec(function (err, data) {
+exports.getCoinsPackageById = function(req, res, next){
+    let CoinsPackageId = req.params.id;
+    CoinsPackage.findById(CoinsPackageId).exec(function (err, data) {
         if (err) {
             return res.status(400).send({
                 success: false,
@@ -86,56 +77,56 @@ exports.getSubscriptionById = function(req, res, next){
         }else {
             return res.status(204).send({
                 success: false,
-                msg:'No subscription records found.'
+                msg:'No coin package records found.'
             })
         }
     });
 }
 
-exports.addSubscription = function (req, res, next) {
+exports.addCoinsPackage = function (req, res, next) {
     let data = req.body;
     let query = {
         'title':data.title
     }
-    Subscription.find(query,function(err, resultdata){
-        if (err) {
+    CoinsPackage.find(query,function(err, resultdata){
+        if(err) {
             return res.status(400).send({
                 success: false,
                 error: err
             });
         } else if(resultdata.length!= 0 ){
-            return res.status(401).send({
-                success: false,
-                msg:'Subscription package with same title already exists.'
-            }) 
-        }else{
-                Subscription(data).save(data , function(err, result) {
-                    if (err) {
-                        return res.status(400).send({
-                            success: false,
-                            error: err
-                        });
-                    } else {
-                        return res.send({
-                            success: true,
-                            msg: 'Subscription successfully saved.'
-                        });
-                    }  
-                });
-            }
-        })
-    }
+                return res.status(401).send({
+                    success: false,
+                    msg:'CoinsPackage package with same title already exists.'
+                }); 
+        } else{
+            CoinsPackage(data).save(data , function(err, result) {
+                if (err) {
+                    return res.status(400).send({
+                        success: false,
+                        error: err
+                    });
+                } else {
+                    return res.send({
+                        success: true,
+                        msg: 'CoinsPackage successfully saved.'
+                    });
+                }  
+            });
+        }
+    })
+}
 
-exports.updateSubscription = function (req, res, next){
-    let subscriptionId = req.params.id;
-    Subscription.findById(subscriptionId).exec(function (err, data) {
+exports.updateCoinsPackage = function (req, res, next){
+    let CoinsPackageId = req.params.id;
+    CoinsPackage.findById(CoinsPackageId).exec(function (err, data) {
         if (err) {
             return res.status(400).send({
                 success: false,
                 error: err
             });
         } else if(data){
-            Subscription.update({'_id': subscriptionId}, {
+            CoinsPackage.update({'_id': CoinsPackageId}, {
                 $set: {
                   "title": req.body.title,
                   "description": req.body.description,
@@ -152,7 +143,7 @@ exports.updateSubscription = function (req, res, next){
                 } else {
                     return res.send({
                         success: true,
-                        msg: 'Subscription successfully saved.'
+                        msg: 'CoinsPackage successfully saved.'
                     });
                 }  
             });
@@ -165,9 +156,9 @@ exports.updateSubscription = function (req, res, next){
     });
 }
 
-exports.removeSubscription =  function(req, res, next){
-    let subscriptionId = req.params.id;
-    Subscription.remove({'_id': subscriptionId}, function(err, result){
+exports.removeCoinsPackage =  function(req, res, next){
+    let CoinsPackageId = req.params.id;
+    CoinsPackage.remove({'_id': CoinsPackageId}, function(err, result){
         if(err) {
             return res.status(400).send({
                 success: false,

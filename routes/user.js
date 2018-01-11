@@ -4,6 +4,7 @@ module.exports = function(app, express) {
   const router = express.Router();
   let adminController = require('../controllers/admin/admin');
   let subscriptionController = require('../controllers/subscription/subscription');
+  let coinsPackageController = require('../controllers/coins-package/coins_package');  
   let getUserController = require('../controllers/apis/getUser');
   let getMediaInsightController = require('../controllers/apis/getMediaInsight')
   let getBestFollowerController = require('../controllers/apis/getBestFollower');
@@ -23,6 +24,13 @@ module.exports = function(app, express) {
   app.post('/addSubscription',subscriptionController.addSubscription);
   app.put('/updateSubscription/:id',subscriptionController.updateSubscription);
   app.delete('/removeSubscription/:id', subscriptionController.removeSubscription);
+  
+  //coins-package routes
+  app.get('/getAllCoinsPackages', coinsPackageController.getAllCoinsPackages);
+  app.get('/getCoinsPackageById/:id',coinsPackageController.getCoinsPackageById);
+  app.post('/addCoinsPackage',coinsPackageController.addCoinsPackage);
+  app.put('/updateCoinsPackage/:id',coinsPackageController.updateCoinsPackage);
+  app.delete('/removeCoinsPackage/:id', coinsPackageController.removeCoinsPackage);
   
   // instagram apis routes
   app.post('/getUserDetail', getUserController.getUserDetail);
